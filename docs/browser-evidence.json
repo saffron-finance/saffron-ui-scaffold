@@ -1,0 +1,40 @@
+[
+  {
+    "mode": "live",
+    "passed": true,
+    "rpcRequests": 38,
+    "walletMethods": [
+      "eth_accounts",
+      "eth_chainId",
+      "eth_chainId",
+      "wallet_switchEthereumChain",
+      "eth_accounts",
+      "eth_chainId",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_call",
+      "eth_accounts",
+      "eth_chainId",
+      "eth_chainId",
+      "eth_sendTransaction"
+    ],
+    "broadcasts": 0,
+    "scriptErrors": [],
+    "mobileOverflow": false
+  },
+  {
+    "mode": "mock",
+    "passed": true,
+    "rpcRequests": 0,
+    "walletMethods": [],
+    "broadcasts": 0,
+    "scriptErrors": [],
+    "mobileOverflow": false
+  }
+]

@@ -1,0 +1,190 @@
+{
+  "capturedAt": "2026-10-22T11:01:11.958Z",
+  "loader": {
+    "initializedVaults": 298,
+    "errors": []
+  },
+  "networks": [
+    {
+      "key": "ethereum",
+      "chainId": 1,
+      "block": "26247718",
+      "blockHash": "0xf5dcdabf2a71854a80dd069cd9e355876b96f979cad035c9c516038e815548e5",
+      "factories": [
+        {
+          "address": "0x7fE802B891734DB681b7353bFF9E6c85ce0ab200",
+          "codeHash": "0xa390a5042b2d82d40f2196aec19ea45ef436fb05e39b2448ef8e79d30fd892ee",
+          "vaultCount": "98"
+        }
+      ],
+      "loadedVaults": 93,
+      "openVaults": 42,
+      "rangeCount": 93
+    },
+    {
+      "key": "arbitrum",
+      "chainId": 42161,
+      "block": "517204538",
+      "blockHash": "0x0ea2fe3f095f15964f0fc9f017c53105e68409641553972c2be148030c678744",
+      "factories": [
+        {
+          "address": "0xd4E8582e36AF0E0d5c1bcd8303984870b086d3d2",
+          "codeHash": "0xa390a5042b2d82d40f2196aec19ea45ef436fb05e39b2448ef8e79d30fd892ee",
+          "vaultCount": "64"
+        }
+      ],
+      "loadedVaults": 64,
+      "openVaults": 32,
+      "rangeCount": 64
+    },
+    {
+      "key": "base",
+      "chainId": 8453,
+      "block": "52938762",
+      "blockHash": "0xed4574ee163a35a1a27dead61c4c20600b70666df214ac8c0116a968e6e8b331",
+      "factories": [
+        {
+          "address": "0xd4E8582e36AF0E0d5c1bcd8303984870b086d3d2",
+          "codeHash": "0xc42baf9165aa85d966e9dcffc34ecad84b097e294234af3e08177e259645ae0f",
+          "vaultCount": "5"
+        }
+      ],
+      "loadedVaults": 5,
+      "openVaults": 1,
+      "rangeCount": 5
+    },
+    {
+      "key": "bnb",
+      "chainId": 56,
+      "block": "129118354",
+      "blockHash": "0xe361a3c6ba369d100159e80c7cbde20261a5b431c19689acf95d30c35efbc5d0",
+      "factories": [
+        {
+          "address": "0x9b99ffb478894f165b0d849614d8f440469bc01a",
+          "codeHash": "0x2290337c9499ec263ee2c7313d061e75c40c21d2d8a89ef16e9799b265e20d03",
+          "vaultCount": "5"
+        }
+      ],
+      "loadedVaults": 5,
+      "openVaults": 2,
+      "rangeCount": 5
+    },
+    {
+      "key": "robinhood",
+      "chainId": 4663,
+      "block": "95061783",
+      "blockHash": "0xc8ef4cb47c49f548790bbb5d4377ff706a12a4616260ac7130601a3523893979",
+      "factories": [
+        {
+          "address": "0xb24b143ad6bB5bE9559CcC75f34A2261b7456904",
+          "codeHash": "0x2603db6e2c1219a5a78d042ebdedb759078b8a165e862bd01f87cd75356c1a66",
+          "vaultCount": "131"
+        }
+      ],
+      "loadedVaults": 131,
+      "openVaults": 54,
+      "rangeCount": 131
+    }
+  ],
+  "depositSimulations": {
+    "capturedAt": "2026-10-22T11:03:56.782Z",
+    "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+    "results": [
+      {
+        "chain": "ethereum",
+        "chainId": 1,
+        "block": "26247732",
+        "blockHash": "0x3ec94352bc0ef18f568c8501dc10c70c28585b345532ebed3b13a1eee17e8ebc",
+        "vault": "0xFED44a18E79dA087fDbDaA78485445e6DafFA2B9",
+        "token": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "tokenSymbol": "USDT",
+        "tokenDecimals": 6,
+        "bearer": "0x5FfCE3E8dC9498Fbe9B0Cd3a5422A84720d62769",
+        "caller": "0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36",
+        "amountBaseUnits": "1",
+        "override": "caller runtime code only; no persistent state or broadcast",
+        "probeCodeHash": "0xd107cecc297c690ab6ced8432f35612b7b8aa3655b301c6f2c766b95fcbf38fe",
+        "success": true,
+        "tokenDelta": "-1",
+        "bearerDelta": "1",
+        "rawReturn": "0x00000000000000000000000000000000000000000000000000001aa3f9ca54a800000000000000000000000000000000000000000000000000001aa3f9ca54a700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+      },
+      {
+        "chain": "arbitrum",
+        "chainId": 42161,
+        "block": "517205127",
+        "blockHash": "0x68e23b7bf8164071fa52ba751c2481db5ab749ca8b435e1c95ed31a403d82fe3",
+        "vault": "0x8B0646684B921421f9Cd61136C536D2897d0d615",
+        "token": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "tokenSymbol": "WETH",
+        "tokenDecimals": 18,
+        "bearer": "0x0878930E0c13De7cAeb37F2A530dC8c9a452bC03",
+        "caller": "0xC6F780497A95e246EB9449f5e4770916DCd6396A",
+        "amountBaseUnits": "1",
+        "override": "caller runtime code only; no persistent state or broadcast",
+        "probeCodeHash": "0xd107cecc297c690ab6ced8432f35612b7b8aa3655b301c6f2c766b95fcbf38fe",
+        "success": true,
+        "tokenDelta": "-1",
+        "bearerDelta": "1",
+        "rawReturn": "0x000000000000000000000000000000000000000000000011f1269ed827fc62e5000000000000000000000000000000000000000000000011f1269ed827fc62e400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+      },
+      {
+        "chain": "base",
+        "chainId": 8453,
+        "block": "52938844",
+        "blockHash": "0x0895ac0c8a506cd0371dbad32d10e565a22f03a696eabe5631c52a3640fb3b7e",
+        "vault": "0x53A352C9b16F78Fd0B374D03E2c4cA8842bDEb2D",
+        "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "tokenSymbol": "USDC",
+        "tokenDecimals": 6,
+        "bearer": "0x101A5108cd40e7Ec2E76428fA9c57b08039dE51B",
+        "caller": "0xfBB6Eed8e7aa03B138556eeDaF5D271A5E1e43ef",
+        "amountBaseUnits": "1",
+        "override": "caller runtime code only; no persistent state or broadcast",
+        "probeCodeHash": "0xd107cecc297c690ab6ced8432f35612b7b8aa3655b301c6f2c766b95fcbf38fe",
+        "success": true,
+        "tokenDelta": "-1",
+        "bearerDelta": "1",
+        "rawReturn": "0x000000000000000000000000000000000000000000000000000004c78b9f3295000000000000000000000000000000000000000000000000000004c78b9f329400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+      },
+      {
+        "chain": "bnb",
+        "chainId": 56,
+        "block": "129118719",
+        "blockHash": "0xa06c7ff0890384f3168b9b1f8366ff4153816617791e886eeab3c6c85354f893",
+        "vault": "0x3A7587F9f1792bF803dd147612a7951b36039208",
+        "token": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "tokenSymbol": "WBNB",
+        "tokenDecimals": 18,
+        "bearer": "0x89e2bF33C6EF15EEA166dB17267A1D48345682C4",
+        "caller": "0x7d98804119551f915a75cE278526ac7eE5077087",
+        "amountBaseUnits": "1",
+        "override": "caller runtime code only; no persistent state or broadcast",
+        "probeCodeHash": "0xd107cecc297c690ab6ced8432f35612b7b8aa3655b301c6f2c766b95fcbf38fe",
+        "success": true,
+        "tokenDelta": "-1",
+        "bearerDelta": "1",
+        "rawReturn": "0x0000000000000000000000000000000000000000000000027b7fa9e4ed21ec930000000000000000000000000000000000000000000000027b7fa9e4ed21ec9200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+      },
+      {
+        "chain": "robinhood",
+        "chainId": 4663,
+        "block": "95063416",
+        "blockHash": "0x612f81ce8aef389cff34d346eadeb4a8a12dea84d052bc299b3d3e24f9f68beb",
+        "vault": "0x7e8cC6862BffF7E7D4fAD98AeA2741c3BDa4edCb",
+        "token": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+        "tokenSymbol": "USDG",
+        "tokenDecimals": 6,
+        "bearer": "0x1CD9816306f3F4Aa356FC182876Cd5B3a72A4Eb9",
+        "caller": "0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca",
+        "amountBaseUnits": "1",
+        "override": "caller runtime code only; no persistent state or broadcast",
+        "probeCodeHash": "0xd107cecc297c690ab6ced8432f35612b7b8aa3655b301c6f2c766b95fcbf38fe",
+        "success": true,
+        "tokenDelta": "-1",
+        "bearerDelta": "1",
+        "rawReturn": "0x000000000000000000000000000000000000000000000000000003ae89461571000000000000000000000000000000000000000000000000000003ae8946157000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+      }
+    ]
+  }
+}
