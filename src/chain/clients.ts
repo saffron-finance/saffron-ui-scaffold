@@ -1,8 +1,7 @@
 import { createPublicClient, http, type PublicClient } from 'viem'
 import { CHAINS, rpcFor, type ChainKey, type ChainDef } from './chains'
 
-// One viem public client per chain that has a usable RPC. Chains without an RPC (e.g. Robinhood until
-// a QuickNode endpoint is supplied) are simply absent from the map and skipped by the loader.
+// A client per supported chain; unavailable relay configuration remains an explicit error.
 const clients = new Map<ChainKey, PublicClient>()
 
 for (const def of CHAINS) {

@@ -1,5 +1,5 @@
 // Minimal ABIs, copied verbatim (relevant fragments) from Saffron's official ABIs in
-// saffron-fixed-income/packages/core/src/abis/{VaultFactory,Vault}.json. Read-only surface only.
+// the deployed Saffron factory and vault interfaces. Read-only surface only.
 
 export const factoryAbi = [
   {

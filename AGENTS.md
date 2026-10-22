@@ -34,7 +34,7 @@ production server or RPC relay.
 - Live vault reads use factory enumeration and Multicall3 on Ethereum (1),
   Arbitrum (42161), Base (8453), BNB Chain (56), and Robinhood Chain (4663). Factory addresses live only in
   `src/chain/chains.ts`.
-- Production reads go through the same-origin `rpc/<chain>` Node relay. Wallet
+- Development and production reads go through the same-origin `rpc/<chain>` Node relay. Wallet
   writes go directly through the injected wallet and never through that relay.
 - The relay is read-only. Do not add signing, account, transaction-broadcast,
   trace, debug, or admin RPC methods without a security review.
@@ -82,7 +82,7 @@ production server or RPC relay.
 ## Security and naming
 
 - Never commit `.env`, RPC credentials, provider tokens, private keys, wallet
-  secrets, or production domains. Public builds must not embed `VITE_RPC_*`.
+  secrets, or production domains. No build or development module may expose RPC configuration; keep Vite env exposure disabled.
 - Do not reintroduce retired branding, alternate product routes, or
   deployment-specific hostnames. The product/package name is Saffron UI Scaffold
   / `saffron-ui-scaffold`.

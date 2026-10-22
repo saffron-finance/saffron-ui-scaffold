@@ -1,190 +1,74 @@
-// Zero-dependency production server for the Saffron dashboard.
-//  - serves the built static app from ../dist
-//  - proxies POST /rpc/<chain> to the matching QuickNode endpoint, keeping the secret token
-//    server-side so it never ships to the browser
-//  - only forwards a small allowlist of read-only JSON-RPC methods, so a public URL can't be used
-//    to drain the QuickNode quota with arbitrary calls
+// Static production hosting plus the same server-only RPC relay used in development.
 import { createServer } from 'node:http'
-import { readFile, readFileSync } from 'node:fs'
+import { readFile, realpath } from 'node:fs/promises'
 import { extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
+import { createRpcHandler } from './rpc.mjs'
 
-const readFileAsync = promisify(readFile)
-const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
+const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const DIST = join(ROOT, 'dist')
 const PORT = Number(process.env.PORT) || 3200
 const HOST = process.env.BIND_HOST || '127.0.0.1'
-// Mount at the domain root by default. A deployment can supply another prefix
-// without changing or rebuilding the frontend source.
 const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/$/, '')
-
-// RPC targets: process.env wins (for prod hosting), else the .env used by the frontend in dev.
-const env = {}
-try {
-  for (const line of readFileSync(join(ROOT, '.env'), 'utf8').split('\n')) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(\S+)/)
-    if (m && !line.trim().startsWith('#')) env[m[1]] = m[2]
-  }
-} catch { /* no .env — rely on process.env */ }
-
-const RPC = {
-  // Public fallbacks keep Ethereum and Arbitrum useful before private
-  // QuickNode endpoints are supplied. Production secrets still override them.
-  ethereum:
-    process.env.RPC_ETHEREUM ||
-    env.RPC_ETHEREUM ||
-    env.VITE_RPC_ETHEREUM ||
-    'https://ethereum-rpc.publicnode.com',
-  arbitrum:
-    process.env.RPC_ARBITRUM ||
-    env.RPC_ARBITRUM ||
-    env.VITE_RPC_ARBITRUM ||
-    'https://arbitrum-one-rpc.publicnode.com',
-  base: process.env.RPC_BASE || env.RPC_BASE || env.VITE_RPC_BASE || 'https://base-rpc.publicnode.com',
-  bnb: process.env.RPC_BNB || env.RPC_BNB || env.VITE_RPC_BNB || 'https://bsc-rpc.publicnode.com',
-  robinhood: process.env.RPC_ROBINHOOD || env.RPC_ROBINHOOD || env.VITE_RPC_ROBINHOOD,
-}
-
-const ALLOWED_METHODS = new Set([
-  'eth_chainId',
-  'eth_blockNumber',
-  'eth_call',
-  'eth_getLogs',
-  'eth_getBlockByNumber',
-  'eth_getCode',
-  'net_version',
-])
-
+const rpc = createRpcHandler({ basePath: BASE_PATH })
 const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2',
-  '.woff': 'font/woff',
-  '.map': 'application/json',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.woff': 'font/woff',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp',
 }
 
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let b = ''
-    req.on('data', (c) => {
-      b += c
-      if (b.length > 2_000_000) reject(new Error('body too large'))
-    })
-    req.on('end', () => resolve(b))
-    req.on('error', reject)
-  })
+/** Serve only real, non-hidden files contained in dist, including after symlinks. */
+async function staticFile(path) {
+  const base = await realpath(DIST)
+  const actual = await realpath(path)
+  const inside = relative(base, actual)
+  if (!inside || inside.startsWith('..') || inside.split('/').some(part => part.startsWith('.'))) throw new Error('forbidden')
+  return readFile(actual)
 }
 
-// Every call in the (possibly batched) JSON-RPC payload must be in the allowlist.
-function allMethodsAllowed(raw) {
-  let parsed
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    return false
-  }
-  const calls = Array.isArray(parsed) ? parsed : [parsed]
-  return calls.length > 0 && calls.every((c) => c && c.jsonrpc === '2.0' &&
-    typeof c.method === 'string' && ALLOWED_METHODS.has(c.method) &&
-    (c.params === undefined || Array.isArray(c.params)))
+/** All public errors are fixed messages; no filesystem paths or exceptions escape. */
+function end(res, status, message) {
+  res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8' })
+  res.end(message)
 }
 
 const server = createServer(async (req, res) => {
-  // Force one request per connection (no keep-alive). Some browsers reach this server through a
-  // forward proxy (a VPN / corporate proxy — it sends `Proxy-Connection` and absolute-URI request
-  // lines) that pipelined requests and desynced their HTTP framing, so one request's body bled into
-  // the next and Node rejected it with HPE_INVALID_METHOD → 400. Closing after each response stops
-  // the pipelining and the desync. (TLS in front would also fix it by tunnelling opaquely.)
   res.setHeader('Connection', 'close')
-
-  const url = new URL(req.url, `http://${req.headers.host}`)
-
-  const rpcPrefix = `${BASE_PATH}/rpc/`
-  if (url.pathname.startsWith(rpcPrefix)) {
-    const chain = url.pathname.slice(rpcPrefix.length).replace(/\/$/, '')
-    const target = Object.hasOwn(RPC, chain) ? RPC[chain] : undefined
-    if (!target) return end(res, 404, 'unknown chain')
-    if (req.method !== 'POST') return end(res, 405, 'POST only')
-    let body
-    try {
-      body = await readBody(req)
-    } catch {
-      return end(res, 413, 'body too large')
-    }
-    if (!allMethodsAllowed(body)) return endJson(res, 403, { error: 'method not allowed' })
-    try {
-      const upstream = await fetch(target, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body,
-        signal: AbortSignal.timeout(20_000),
-      })
-      const text = await upstream.text()
-      res.writeHead(upstream.status, { 'content-type': 'application/json' })
-      res.end(text)
-    } catch {
-      endJson(res, 502, { error: 'upstream failed' })
-    }
-    return
-  }
-
-  // static files (with SPA fallback to index.html)
-  if (BASE_PATH && url.pathname !== BASE_PATH && !url.pathname.startsWith(`${BASE_PATH}/`)) {
-    return end(res, 404, 'not found')
-  }
-  let p
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('Referrer-Policy', 'no-referrer')
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'")
   try {
-    p = decodeURIComponent(url.pathname.slice(BASE_PATH.length))
-  } catch {
-    return end(res, 400, 'invalid path')
-  }
-  if (p === '' || p === '/') p = '/index.html'
-  const filePath = resolve(DIST, `.${p}`)
-  const relativePath = relative(DIST, filePath)
-  if (relativePath.startsWith('..') || relativePath === '') return end(res, 403, 'forbidden')
-  try {
-    const data = await readFileAsync(filePath)
-    res.writeHead(200, { 'content-type': MIME[extname(filePath)] || 'application/octet-stream' })
-    res.end(data)
-  } catch {
+    if (await rpc(req, res)) return
+    const url = new URL(req.url, 'http://localhost')
+    if (BASE_PATH && url.pathname !== BASE_PATH && !url.pathname.startsWith(`${BASE_PATH}/`)) return end(res, 404, 'not found')
+    if (!['GET', 'HEAD'].includes(req.method)) return end(res, 405, 'GET only')
+    let path
+    try { path = decodeURIComponent(url.pathname.slice(BASE_PATH.length)) }
+    catch { return end(res, 400, 'invalid path') }
+    if (path.split('/').some(part => part.startsWith('.'))) return end(res, 403, 'forbidden')
+    if (!path || path === '/') path = '/index.html'
+    const file = resolve(DIST, `.${path}`)
+    if (relative(DIST, file).startsWith('..')) return end(res, 403, 'forbidden')
     try {
-      const data = await readFileAsync(join(DIST, 'index.html'))
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      res.end(data)
+      const data = await staticFile(file)
+      res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream' })
+      res.end(req.method === 'HEAD' ? undefined : data)
     } catch {
-      end(res, 404, 'not found')
+      // SPA fallback is only for extensionless page routes, never a secret/asset path.
+      if (extname(path)) return end(res, 404, 'not found')
+      const data = await staticFile(join(DIST, 'index.html'))
+      res.writeHead(200, { 'content-type': MIME['.html'] })
+      res.end(req.method === 'HEAD' ? undefined : data)
     }
-  }
+  } catch { if (!res.headersSent) end(res, 502, 'request unavailable'); else res.end() }
 })
 
-function end(res, code, msg) {
-  res.writeHead(code, { 'content-type': 'text/plain' })
-  res.end(msg)
-}
-function endJson(res, code, obj) {
-  res.writeHead(code, { 'content-type': 'application/json' })
-  res.end(JSON.stringify(obj))
-}
-
-// Enforce one request per TCP connection at the server level too — belt and suspenders with the
-// per-response `Connection: close` above.
+// Keep framing and slow-client limits bounded even behind a reverse proxy.
 server.maxRequestsPerSocket = 1
-
-// Answer a malformed request (e.g. one an upstream proxy mangled) cleanly instead of letting it
-// disrupt the socket.
-server.on('clientError', (_err, socket) => {
+server.requestTimeout = 30_000
+server.headersTimeout = 15_000
+server.on('clientError', (_error, socket) => {
   if (socket.writable) socket.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n')
 })
-
-server.listen(PORT, HOST, () => {
-  const chains = Object.entries(RPC)
-    .filter(([, v]) => v)
-    .map(([k]) => k)
-  console.log(`Saffron dashboard on http://${HOST}:${PORT}`)
-  console.log(`Proxying: ${chains.join(', ') || '(none — set RPC_* env or .env VITE_RPC_*)'}`)
-})
+server.listen(PORT, HOST, () => console.log(`Saffron UI listening on port ${PORT}`))

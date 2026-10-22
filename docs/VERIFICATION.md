@@ -1,11 +1,12 @@
-# Verification — 2026-10-22
+# Verification and security boundaries
 
-## Scope and provenance
+## Scope
 
-- UI source: Saffron Scaffold `84e98ce0b978b525b8ed59a57ed21a05a157c08e` (September 2).
-- Network deployment metadata was checked against the pre-September-3 protocol configuration at `9f112e611` and against deployed bytecode.
-- This repository has new history. No later source trees were merged or cherry-picked.
-- The read relay is required to protect RPC credentials. No transaction signing service, database or host configuration is included.
+This is the minimal variable-side contracts UI. The supported factory metadata
+has been checked against deployed bytecode. The read relay protects provider
+configuration; no transaction-signing service, database or host-specific setup
+is included. Pinned chain evidence below is historical verification, not a claim
+that every vault remains open today.
 
 ## Actual application reads
 
@@ -54,7 +55,7 @@ transfer/allowance checks, as expected. On Robinhood, `0x13be252b` decodes as
 
 - Clean lockfile installation with package lifecycle scripts disabled.
 - TypeScript/Vite live build passed.
-- 23 regression tests passed: transaction coordination, exact calldata,
+- Transaction regression tests cover: transaction coordination, exact calldata,
   zero-first approvals, reverted receipts, stale state, account/network changes,
   chain-qualified ranges, and read-relay rejection cases.
 - Live and static builds passed Chromium checks at 1440px and 390px, with no script errors or horizontal overflow.
@@ -69,7 +70,7 @@ transfer/allowance checks, as expected. On Robinhood, `0x13be252b` decodes as
 - Failed reads cannot masquerade as open capacity or token balances.
 - The wallet path checks current identity, capacity, token metadata and receipts.
 - Exact minimum-amount calldata rejects competing partial fills; existing nonzero allowances are cleared before a replacement approval.
-- The read relay validates JSON-RPC requests, bounds upstream time, and rejects malformed paths.
+- The shared development/production relay validates requests and results, correlates batch IDs, bounds resources and strips upstream diagnostics.
 
 ## Operational limits
 
@@ -77,3 +78,34 @@ transfer/allowance checks, as expected. On Robinhood, `0x13be252b` decodes as
 - The static fixture is from September 1 and is a visual demo only.
 - Only the five listed active factories are supported. Archived/inactive networks and legacy factories are not promised.
 - No site or existing service was redeployed.
+
+## Credential-isolation and privacy regression checks
+
+- Fake credentials in HTTP errors, JSON-RPC errors, diagnostic fields, invalid
+  success payloads and redirects cannot reach browser-facing relay responses.
+- Oversized replies, unknown/duplicate IDs, oversized batches, cross-site requests
+  and non-JSON POSTs fail closed. Real successful reads and out-of-order batches
+  remain supported.
+- An isolated Vite fixture proves server-only `.env` reads work, arbitrary
+  `VITE_*` values are not exposed in modules, sensitive paths are denied, and
+  legacy `VITE_RPC_*` configuration fails without disclosing its value.
+- Production and static builds use local fonts/icons. Browser checks verify no
+  automatic cross-origin resource requests. Mock mode remains RPC/wallet-free.
+- These checks use disposable test endpoints and fake values, never live signing
+  keys. No test performs a mainnet write or starts a fork node.
+
+## Dependency security baseline
+
+The lockfile updates development tooling to Vite 6.4.5, esbuild 0.25.12 and
+source-map-js 1.2.2 to address the advisories affecting the earlier versions.
+Use the committed lockfile with `npm ci --ignore-scripts`. Run `npm audit` when
+updating dependencies; an audit result reflects the registry's current advisory
+set, not a guarantee against unknown vulnerabilities.
+
+Final hardening verification: **40 tests passed**, both build modes passed,
+production/mock Chromium flows passed at desktop and mobile sizes, and neither
+flow issued an automatic cross-origin resource request. The live loader still
+read **298 initialized vaults and 298 ranges** across all five chains. Fake
+server/browser-prefixed RPC settings were absent from both generated builds.
+The clean lockfile install passed and `npm audit` reported **zero known
+vulnerabilities** in that dependency tree at verification time.

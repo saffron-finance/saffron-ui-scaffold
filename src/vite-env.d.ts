@@ -1,9 +1,4 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  readonly VITE_USE_MOCK_DATA?: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+/** The only custom build value exposed to browser code; never a credential. */
+declare const __STATIC_DEMO__: boolean

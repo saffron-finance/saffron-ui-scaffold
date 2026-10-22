@@ -1,0 +1,4 @@
+Local network images are sourced from the public DefiLlama icons service.
+Local token images are sourced from trustwallet/assets; its license is included.
+Names and marks belong to their respective token/network owners; no affiliation is implied.
+Unknown tokens use local monograms. Browsers do not contact an external icon service.

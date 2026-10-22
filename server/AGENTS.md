@@ -5,9 +5,9 @@ root `AGENTS.md`.
 
 ## Purpose and trust boundary
 
-- `proxy.mjs` is a zero-dependency production server. It serves the compiled
-  `dist/` application and relays same-origin `POST /rpc/<chain>` requests to a
-  configured upstream RPC endpoint.
+- `proxy.mjs` is a zero-dependency production server for the compiled `dist/`
+  application. `rpc.mjs` provides the same server-only read relay to production
+  and Vite development. Never import it from a browser module.
 - The relay exists to keep provider credentials out of browser bundles. Read
   RPC URLs from server-side environment variables or the ignored local `.env`;
   never return, log, embed, or commit them.
@@ -45,13 +45,13 @@ root `AGENTS.md`.
 - Timeouts, cancellation, or rate limiting should fail closed and must not
   broaden the method or origin trust model.
 - Keep production binding on loopback by default; public TLS and request limits
-  belong at the reverse proxy described in `ops/README.md`.
+  belong at the reverse proxy; see the operator-security section of `README.md`.
 
 ## Verification
 
 After server changes:
 
-1. Run `npm ci` and `npm run build` from the repository root.
+1. Run `npm ci --ignore-scripts` and `npm run build` from the repository root.
 2. Start the server on an unused loopback port with test-safe RPC endpoints.
 3. Confirm a static asset and the SPA fallback return successfully.
 4. Confirm an allowlisted read such as `eth_chainId` is relayed.

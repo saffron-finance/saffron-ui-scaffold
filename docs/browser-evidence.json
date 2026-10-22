@@ -2,7 +2,7 @@
   {
     "mode": "live",
     "passed": true,
-    "rpcRequests": 38,
+    "rpcRequests": 36,
     "walletMethods": [
       "eth_accounts",
       "eth_chainId",
@@ -26,7 +26,8 @@
     ],
     "broadcasts": 0,
     "scriptErrors": [],
-    "mobileOverflow": false
+    "mobileOverflow": false,
+    "externalRequests": []
   },
   {
     "mode": "mock",
@@ -35,6 +36,7 @@
     "walletMethods": [],
     "broadcasts": 0,
     "scriptErrors": [],
-    "mobileOverflow": false
+    "mobileOverflow": false,
+    "externalRequests": []
   }
 ]

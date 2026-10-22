@@ -1,10 +1,14 @@
-import { useState, useSyncExternalStore, type ReactNode } from 'react'
-import { getLogo, setLogo, subscribeLogos } from './logoStore'
+import { useState, type ReactNode } from 'react'
+import localIcons from './localIcons.json'
 
-// Real token logo by (chainId, address) from DefiLlama's icon service, falling back to the monogram
-// coin when the token has no logo. A shared per-symbol store keeps the SAME token rendered
-// identically everywhere: the first instance to resolve a real logo records it, and all instances
-// (across chains and re-renders) then use that exact URL.
+/** Resolve bundled assets relative to the app mount, never to a third-party host. */
+function localIcon(key: string): string | undefined {
+  const path = (localIcons as Record<string, string>)[key]
+  return path ? new URL(path, document.baseURI).toString() : undefined
+}
+
+// Known token logos are keyed by chain AND address, not by spoofable symbols.
+// Unlisted tokens use a local monogram without triggering any external request.
 export function TokenLogo({
   chainId,
   address,
@@ -16,19 +20,15 @@ export function TokenLogo({
   symbol: string
   size?: number
 }) {
-  const cached = useSyncExternalStore(subscribeLogos, () => getLogo(symbol))
-  const [failed, setFailed] = useState(false)
-  const url =
-    cached ?? (address && chainId ? `https://token-icons.llamao.fi/icons/tokens/${chainId}/${address.toLowerCase()}?h=48&w=48` : undefined)
-
-  if (!url || (failed && !cached)) return <TokenIcon symbol={symbol} size={size} />
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const url = address ? localIcon(`${chainId}:${address.toLowerCase()}`) : undefined
+  if (!url || failedUrl === url) return <TokenIcon symbol={symbol} size={size} />
   return (
     <img
       className="token-logo"
       style={{ width: size, height: size }}
       src={url}
-      onLoad={() => setLogo(symbol, url)}
-      onError={() => setFailed(true)}
+      onError={() => setFailedUrl(url)}
       alt={symbol}
       title={symbol}
     />
@@ -63,18 +63,9 @@ export function TokenLogoPair({
   )
 }
 
-// Small chain logo, shown on the bottom-right of a token icon — like Uniswap's explore.
-// Ethereum deliberately reuses the exact WETH/Ether token asset used in the vault UI so the
-// network and token marks stay visually consistent.
-const CHAIN_LOGO_URL: Record<string, string> = {
-  ethereum: 'https://token-icons.llamao.fi/icons/tokens/42161/0x82af49447d8a07e3bd95bd0d56f35241523fbab1?h=48&w=48',
-  arbitrum: 'https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg',
-  base: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg',
-  bnb: 'https://icons.llamao.fi/icons/chains/rsz_binance.jpg',
-  robinhood: 'https://icons.llamao.fi/icons/chains/rsz_robinhood.jpg',
-}
+/** Bundled chain marks preserve network identification without external tracking. */
 export function chainLogoUrl(chainKey: string): string | undefined {
-  return CHAIN_LOGO_URL[chainKey]
+  return localIcon(`chain:${chainKey}`)
 }
 export function ChainBadge({ chainKey, size = 15 }: { chainKey: string; size?: number }) {
   const url = chainLogoUrl(chainKey)

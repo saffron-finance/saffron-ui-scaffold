@@ -5,14 +5,11 @@ contract state, browse vault capacity and Uniswap position ranges, connect an
 injected browser wallet, and approve/deposit the vault's variable ERC-20 asset.
 Every transaction is confirmed in the user's own wallet.
 
-## Source boundary
+## Scope
 
-Fresh repository history based on the September 2, 2026 Saffron Scaffold tree
-`84e98ce0b978b525b8ed59a57ed21a05a157c08e`. No later source tree or Git history is
-imported. The original interface and September 1 static fixture are retained.
-Changes are limited to verified Base/BNB network support, chain-specific range
-keys, deposit correctness, read-relay validation, tests, and these instructions.
-Original one-off diagnostics and hosting automation are not included.
+A deliberately small contracts UI: live vault discovery, capacity/range views,
+and explicit wallet-confirmed variable-side deposits. The static fixture is a
+read-only visual example. No hosting automation or server-side signer is included.
 
 This remains a **variable-side deposit UI**, not a fixed-side deposit interface.
 The variable premium buys the right to LP fees; it is not principal that is
@@ -28,9 +25,8 @@ simply returned at maturity. There is no backend transaction signer or database.
 | BNB Chain | 56 | `0x9b99ffb478894f165b0d849614d8f440469bc01a` |
 | Robinhood Chain | 4663 | `0xb24b143ad6bB5bE9559CcC75f34A2261b7456904` |
 
-These factory addresses were already recorded in Saffron's pre-September-3
-configuration. Only verified active factories are enumerated; legacy factories
-and inactive networks are not advertised as supported.
+Only verified active factories are enumerated; legacy factories and inactive
+networks are not advertised as supported.
 
 Reads use factory `nextVaultId()` / `vaultInfo(id)` and Multicall3. A network
 mismatch, incomplete vault state or missing token metadata is an error, never a
@@ -43,7 +39,7 @@ Use Node.js 20.19+ (Node 22/24 also work).
 
 ```sh
 npm ci --ignore-scripts
-cp .env.example .env
+test -f .env || install -m 600 .env.example .env
 # Set RPC_ROBINHOOD and any preferred server-side RPC providers in .env.
 npm start
 ```
@@ -54,17 +50,44 @@ rate limits depend on those providers. Robinhood requires your own RPC endpoint.
 `PORT`, `BIND_HOST` and `BASE_PATH` can configure a deployment. Put HTTPS in front
 of public deployments and preserve both asset and `/rpc/<chain>` routes.
 
-`RPC_*` settings are read only by `server/proxy.mjs`; they never enter the
-frontend bundle. The relay accepts allowlisted read methods only. Approvals and
-deposits go directly through the injected wallet, never through the relay.
+`RPC_*` settings are read only by the Node relay in `server/rpc.mjs`; they
+never enter frontend modules, in development or production. The relay accepts
+allowlisted read methods only. Approvals and deposits go directly through the injected wallet, never through the relay.
 
 **Robinhood wallet setup:** the wallet must already know chain 4663, or you must
 add it using your RPC provider. No unverified public wallet RPC is invented or
 private server endpoint disclosed. The read-only relay is not a wallet write RPC.
 
-For local frontend development, run `npm run dev` on port 5180. The optional
-`VITE_RPC_*` settings are for local development only and are visible in that
-browser; keep authenticated URLs out of shared development servers.
+For local development, run `npm run dev` on port 5180. It uses the same server-only
+`.env` and relay as production; no second server is needed. Vite environment
+exposure is disabled. Remove old `VITE_RPC_*` settings and use `RPC_*` instead;
+legacy browser-prefixed RPC settings deliberately fail startup.
+
+## Operator security and visitor privacy
+
+- Keep `.env` private (mode 600), ignored by Git, and outside `public/` and `dist/`.
+  The relay accepts HTTPS or HTTP URLs without URL-userinfo authentication; use
+  HTTPS for remote providers and provider-supported URL-path/query credentials.
+- Provider HTTP errors, JSON-RPC errors, malformed responses and diagnostic
+  extensions never pass through as free text. Errors are generic; valid Ethereum
+  results are checked and response IDs must match the requests.
+- Requests/responses, batch size, concurrency and upstream time are bounded.
+  Redirects are rejected. Browser requests must be same-origin JSON POSTs.
+- Both servers bind to loopback by default. For public hosting, configure HTTPS,
+  authentication where appropriate, and per-client rate/billing limits at your
+  reverse proxy/provider. The read relay is not an authenticated quota firewall:
+  a non-browser client can still call an intentionally public deployment.
+- The production server restricts assets/connections to its own origin, blocks
+  framing and hidden files, and suppresses referrers. Keep these response headers
+  when adding a reverse proxy. Set equivalent headers if serving the build with
+  another static server.
+- Fonts, network marks and available token logos are bundled locally. Unknown
+  tokens use local monograms; the UI makes no font/icon-service requests.
+  Font and image license/attribution files are retained in `public/`.
+- RPC providers necessarily see chain queries. An injected wallet uses its own
+  provider for account reads and transactions. Explorer links contact the chosen
+  explorer only when followed. Public contract addresses and chain evidence are
+  not credentials; wallet private keys must never be put in this repository.
 
 ## Deposit behavior
 

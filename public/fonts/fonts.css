@@ -1,0 +1,4 @@
+/* Locally served fonts; accompanying licenses are retained. */
+@font-face { font-family: 'Funnel Display'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('./funnel-display-latin-wght-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Host Grotesk'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('./host-grotesk-latin-wght-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400 500; font-display: swap; src: url('./roboto-mono-latin-wght-normal.woff2') format('woff2'); }
